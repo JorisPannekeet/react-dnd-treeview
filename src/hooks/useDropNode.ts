@@ -15,14 +15,14 @@ export const useDropNode = <T>(
   const placeholderContext = useContext(PlaceholderContext);
 
   const debounceShow = useCallback(
-    _.debounce(placeholderContext.showPlaceholder, 300, {
+    _.throttle(placeholderContext.showPlaceholder, 300, {
       leading: false,
       trailing: true,
     }),
     []
   );
   const debounceHide = useCallback(
-    _.debounce(placeholderContext.hidePlaceholder, 300, {
+    _.throttle(placeholderContext.hidePlaceholder, 300, {
       leading: false,
       trailing: true,
     }),
