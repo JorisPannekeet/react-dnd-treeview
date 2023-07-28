@@ -1,10 +1,11 @@
-import { useContext } from "react";
+import { useCallback, useContext } from "react";
 import { useDrop, DragElementWrapper } from "react-dnd";
 import { ItemTypes } from "~/ItemTypes";
 import { PlaceholderContext } from "~/providers";
 import { NodeModel } from "~/types";
 import { isDroppable, getDropTarget, isNodeModel } from "~/utils";
 import { useTreeContext } from "~/hooks";
+import _ from "lodash";
 
 export const useDropNode = <T>(
   item: NodeModel<T>,
@@ -12,6 +13,22 @@ export const useDropNode = <T>(
 ): [boolean, NodeModel<T>, DragElementWrapper<HTMLElement>] => {
   const treeContext = useTreeContext<T>();
   const placeholderContext = useContext(PlaceholderContext);
+
+  const debounceShow = useCallback(
+    _.debounce(placeholderContext.showPlaceholder, 300, {
+      leading: false,
+      trailing: true,
+    }),
+    []
+  );
+  const debounceHide = useCallback(
+    _.debounce(placeholderContext.hidePlaceholder, 300, {
+      leading: false,
+      trailing: true,
+    }),
+    []
+  );
+
   const [{ isOver, dragSource }, drop] = useDrop({
     accept: [ItemTypes.TREE_ITEM, ...treeContext.extraAcceptTypes],
     drop: (dragItem: any, monitor) => {
@@ -67,12 +84,14 @@ export const useDropNode = <T>(
           dropTarget === null ||
           !isDroppable(dragItem, dropTarget.id, treeContext)
         ) {
-          hidePlaceholder();
+          if (placeholderContext.dropTargetId) {
+            debounceHide();
+          }
           return;
         }
 
         if (dropTarget.id !== dropTargetId || dropTarget.index !== index) {
-          showPlaceholder(dropTarget.id, dropTarget.index);
+          debounceShow(dropTarget.id, dropTarget.index);
         }
       }
     },
